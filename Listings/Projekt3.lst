@@ -1,0 +1,132 @@
+A51 MACRO ASSEMBLER  PROJEKT3                                                             04/08/2021 11:07:16 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN .\Objects\Projekt3.obj
+ASSEMBLER INVOKED BY: C:\Keil_v5\C51\BIN\A51.EXE Projekt3.a51 SET(SMALL) DEBUG PRINT(.\Listings\Projekt3.lst) OBJECT(.\O
+                      bjects\Projekt3.obj) EP
+
+LOC  OBJ            LINE     SOURCE
+
+                       1     PROG SEGMENT CODE
+                       2     
+  00A0                 3     LED BIT P2.0
+  00B0                 4     SWITCH BIT P3.0
+                       5             
+  0030                 6     Cel DATA 30h ;2,4,8...
+  0006                 7     Ilosc EQU 6 ;ilosc diod-2, ostatnia zawsze 0h,pierwsza zawsze FE
+                       8     
+----                   9     CSEG AT 0
+0000 020000   F       10     JMP start
+----                  11     RSEG PROG
+                      12             
+0000                  13             start:
+0000 C28C             14                     CLR TR0 ;ZATRZYMUJE TIMER
+0002 75A0FF           15                     MOV P2,#0FFh
+0005 7400             16                     MOV A,#0h
+0007                  17             MAIN:
+0007 30B003           18                     JNB     SWITCH,TIMER
+000A 20B0F3           19                     JB SWITCH, start
+000D                  20             TIMER:
+000D 20B04B           21                     JB SWITCH, STOP
+0010 C28C             22                     CLR TR0 ;ZATRZYMUJE TIMER - zeby rejestr TL0 byl taki sam
+0012 758901           23                     MOV TMOD,#01 ; 16-bitowy timer 0
+0015 758C4C           24                     MOV TH0,#76
+0018 758A01           25                     MOV TL0,#01
+001B C28D             26                     CLR TF0 ;zeruje flage przepelnienia
+001D D28C             27                     SETB TR0 ; startujemy timer 0
+001F 308DFD           28                     JNB TF0,$ ;Jezeli TF0 nie jest ustawione to nie ma przepelnienia
+0022 208D00           29                     JB TF0,SKOK ; skacze, jezeli flaga przepelniona
+                      30                     
+0025                  31             SKOK:
+0025 04               32                     INC A ;DODAJE DO AKUMULATORA 1 PO KAZDYM PRZEPELNIENIU
+0026 F520             33                     MOV 20h,A ;ilosc przepelnien do komorki pod adresem 20h
+0028 AC20             34                     MOV R4, 20h ;przypisanie ilosci przepelnien, nie trzeba uzyc akumulatora mo
+                             zna zostawic rejestr, ale w zadaniu akumuator
+002A 80E1             35                     JMP TIMER ; po dodaniu wraca do timera
+002C                  36             LICZ:
+002C 7830             37                     MOV R0, #Cel ;2,4,8...
+002E 7906             38                     MOV R1, #Ilosc ;ile diod
+                      39                     
+0030 AC20             40                     MOV R4, 20h ;musi byc powtorzenie, bo inkrementuje w petli
+0032 1100     F       41                     ACALL CZEKAJ    
+                      42                             
+0034 75A0FE           43                     MOV P2,#0FEh ;zapalenie pierwszej diody
+0037 75F001           44                     MOV B,#1 ;jedynka przypisana do B
+                      45                     
+003A AC20             46                     MOV R4, 20h ;musi byc powtorzenie, bo inkrementuje w petli
+003C 1100     F       47                     ACALL CZEKAJ
+                      48                                     
+003E                  49             INIT:
+003E 7402             50                     MOV A,#2 ;dwojka przypisana do akumulatora
+0040 A4               51                     MUL AB ;wymnozenie A*B
+0041 F530             52                     MOV Cel,A
+0043 E5A0             53                     MOV A,P2 
+0045 8530F0           54                     MOV B,Cel
+0048 95F0             55                     SUBB A,B
+004A F5A0             56                     MOV P2,A
+A51 MACRO ASSEMBLER  PROJEKT3                                                             04/08/2021 11:07:16 PAGE     2
+
+                      57                     
+004C AC20             58                     MOV R4, 20h ;musi byc powtorzenie, bo inkrementuje w petli
+004E 1100     F       59                     ACALL CZEKAJ
+                      60                     
+0050 D9EC             61             DJNZ R1,INIT
+0052 75A000           62                     MOV P2,#0h ;zapalenie ostatniej diody
+                      63                     
+0055 AC20             64                     MOV R4, 20h ;musi byc powtorzenie, bo inkrementuje w petli
+0057 1100     F       65                     ACALL CZEKAJ
+                      66                             
+0059 80A5             67                     SJMP start
+                      68             
+005B                  69             STOP:
+005B C28C             70                     CLR TR0 ;ZATRZYMUJE TIMER
+005D 80CD             71                     JMP LICZ
+                      72     
+005F                  73             CZEKAJ: ; petla czekaj wykona sie tyle razy ile razy bylo przepelnienie rejestr R4/
+                             akumulator
+005F B28D             74                     CPL TF0 ;zeruje flage przepelnienia
+0061 758C4C           75                     MOV TH0,#76
+0064 758A01           76                     MOV TL0,#01
+0067 D28C             77                     SETB TR0 ; startujemy timer 0
+0069 308DFD           78                     JNB TF0,$ ;Jezeli TF0 nie jest ustawione to nie ma przepelnie
+006C DCF1             79             DJNZ R4,CZEKAJ
+006E 22               80             RET
+                      81             
+                      82     END
+                                     
+A51 MACRO ASSEMBLER  PROJEKT3                                                             04/08/2021 11:07:16 PAGE     3
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+B. . . . . . . . .  D ADDR   00F0H   A   
+CEL. . . . . . . .  D ADDR   0030H   A   
+CZEKAJ . . . . . .  C ADDR   005FH   R   SEG=PROG
+ILOSC. . . . . . .  N NUMB   0006H   A   
+INIT . . . . . . .  C ADDR   003EH   R   SEG=PROG
+LED. . . . . . . .  B ADDR   00A0H.0 A   
+LICZ . . . . . . .  C ADDR   002CH   R   SEG=PROG
+MAIN . . . . . . .  C ADDR   0007H   R   SEG=PROG
+P2 . . . . . . . .  D ADDR   00A0H   A   
+P3 . . . . . . . .  D ADDR   00B0H   A   
+PROG . . . . . . .  C SEG    006FH       REL=UNIT
+SKOK . . . . . . .  C ADDR   0025H   R   SEG=PROG
+START. . . . . . .  C ADDR   0000H   R   SEG=PROG
+STOP . . . . . . .  C ADDR   005BH   R   SEG=PROG
+SWITCH . . . . . .  B ADDR   00B0H.0 A   
+TF0. . . . . . . .  B ADDR   0088H.5 A   
+TH0. . . . . . . .  D ADDR   008CH   A   
+TIMER. . . . . . .  C ADDR   000DH   R   SEG=PROG
+TL0. . . . . . . .  D ADDR   008AH   A   
+TMOD . . . . . . .  D ADDR   0089H   A   
+TR0. . . . . . . .  B ADDR   0088H.4 A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)
